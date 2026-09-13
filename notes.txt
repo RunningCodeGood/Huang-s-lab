@@ -1,0 +1,4 @@
+GitHub upload test
+
+This is a sample text file created alongside hello.py.
+Both files are safe to use for a simple upload test.
