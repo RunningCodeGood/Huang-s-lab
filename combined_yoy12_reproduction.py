@@ -33,11 +33,11 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.diagnostic import breaks_cusumolsresid, acorr_breusch_godfrey
 
 ROOT = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
-DEFAULT_CARD = ROOT / "data" / "Cardfee.xlsx"
-DEFAULT_MACRO = ROOT / "data" / "Macro_Data_201001-202612.xls"
-# Preserve the original fee worksheet identifier.
-CARD_SHEET, CARD_HEADER = "\u6c47\u603b\u6570\u636e", 0
-MACRO_SHEET, MACRO_HEADER = "Macro Data", 1
+DEFAULT_CARD = ROOT / "data" / "Cardfee.csv"
+DEFAULT_MACRO = ROOT / "data" / "Macro_Data_201001-202612.csv"
+CARD_HEADER, MACRO_HEADER = 0, 0
+CSV_ENCODING = "utf-8-sig"
+CSV_SEPARATOR = ","
 DATE_COLUMN = "YYYYMM"
 CARD, MACRO, OUT = DEFAULT_CARD, DEFAULT_MACRO, None
 
@@ -45,7 +45,7 @@ CARD, MACRO, OUT = DEFAULT_CARD, DEFAULT_MACRO, None
 def runtime_info():
     """Record installed versions for provenance without enforcing an environment."""
     packages = {}
-    for name in ("numpy", "pandas", "scipy", "statsmodels", "openpyxl", "xlrd"):
+    for name in ("numpy", "pandas", "scipy", "statsmodels"):
         try:
             packages[name] = metadata.version(name)
         except metadata.PackageNotFoundError:
@@ -145,7 +145,7 @@ MACRO_DESCRIPTIONS = [
 
 
 def normalize_month(value):
-    """Normalize Excel dates, numeric/string YYYYMM, and ISO dates to month start."""
+    """Normalize date objects, numeric/string YYYYMM, and ISO dates to month start."""
     if pd.isna(value):
         raise ValueError("YYYYMM contains a missing date.")
     if isinstance(value, (pd.Timestamp, datetime, date, np.datetime64)):
@@ -157,24 +157,33 @@ def normalize_month(value):
         elif re.fullmatch(r"\d{4}[-/]\d{1,2}([-/]\d{1,2})?([ T].*)?", token):
             ts = pd.Timestamp(token)
         else:
-            raise ValueError(f"Unsupported YYYYMM value: {value!r}. Expected YYYYMM or an ISO/Excel date.")
+            raise ValueError(f"Unsupported YYYYMM value: {value!r}. Expected YYYYMM or an ISO date.")
     return ts.to_period("M").to_timestamp()
 
 
-def read_monthly(path, sheet, header, columns, first_month, last_month):
-    """Read inputs without imputation, forward filling, or duplicate aggregation."""
+def read_monthly(path, header, columns, first_month, last_month):
+    """Read monthly CSV data without imputation or duplicate aggregation."""
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(f"Input file not found: {path}")
-    suffix = path.suffix.lower()
-    if suffix not in (".xls", ".xlsx", ".xlsm"):
-        raise ValueError(f"Expected an .xls, .xlsx, or .xlsm file: {path}")
-    engine = "xlrd" if suffix == ".xls" else "openpyxl"
-    raw = pd.read_excel(path, sheet_name=sheet, header=header, engine=engine).dropna(how="all")
+    if path.suffix.lower() != ".csv":
+        raise ValueError(f"Expected a CSV file: {path}")
+    raw = pd.read_csv(
+        path,
+        header=header,
+        encoding=CSV_ENCODING,
+        sep=CSV_SEPARATOR,
+        engine="c",
+        float_precision="round_trip",
+        low_memory=False,
+    ).dropna(how="all")
+    raw.columns = raw.columns.str.strip()
+    if raw.columns.duplicated().any():
+        raise ValueError(f"{path.name}: duplicate column names after trimming whitespace.")
     required = [DATE_COLUMN] + list(columns)
     missing = [name for name in required if name not in raw.columns]
     if missing:
-        raise ValueError(f"{path.name} / {sheet}: missing columns {missing}; available columns: {list(raw.columns)}")
+        raise ValueError(f"{path.name}: missing columns {missing}; available columns: {list(raw.columns)}")
     chosen = raw[required].copy()
     chosen.index = pd.DatetimeIndex([normalize_month(v) for v in chosen.pop(DATE_COLUMN)], name="date")
     if chosen.index.duplicated().any():
@@ -192,7 +201,8 @@ def read_monthly(path, sheet, header, columns, first_month, last_month):
         r, c = np.where(~finite)
         examples = [(str(selected.index[i].date()), selected.columns[j]) for i, j in zip(r[:10], c[:10])]
         raise ValueError(f"{path.name}: missing or infinite values at {examples}; no imputation applied.")
-    record = dict(file=path.name, sheet=sheet, header_zero_based=header, rows_read=len(raw),
+    record = dict(file=path.name, format="CSV", encoding=CSV_ENCODING, separator=CSV_SEPARATOR,
+                  header_zero_based=header, rows_read=len(raw),
                   rows_used=len(selected), rows_outside_scope=len(raw)-len(selected),
                   first_month=first_month, last_month=last_month, input_sorted=was_sorted,
                   duplicate_months=0, missing_months=0, invalid_required_values=0)
@@ -200,9 +210,9 @@ def read_monthly(path, sheet, header, columns, first_month, last_month):
 
 
 def load_data():
-    c, cq = read_monthly(CARD, CARD_SHEET, CARD_HEADER,
+    c, cq = read_monthly(CARD, CARD_HEADER,
                          ["Commercial Card", "Small Business"], START, END)
-    m, mq = read_monthly(MACRO, MACRO_SHEET, MACRO_HEADER,
+    m, mq = read_monthly(MACRO, MACRO_HEADER,
                          list(MAPPING.values()), "2010-01-01", END)
     d = m.rename(columns={v: k for k, v in MAPPING.items()}).copy()
     d["Commercial Card"] = c["Commercial Card"]
@@ -569,7 +579,9 @@ def run_experiments():
                   long_run_selected=selected,short_run_selected=sr_selected,short_run_common_selected=alt_selected)
     manifest.update(runtime=runtime_info(), reference_document=REFERENCE_DOCUMENT,
                     reference_input_sha256=REFERENCE_INPUT_SHA256,
-                    reference_input_bytes_match={r['role']:r['sha256']==REFERENCE_INPUT_SHA256[r['role']] for r in inputs},
+                    input_format="CSV",
+                    reference_input_bytes_match={r['role']:None for r in inputs},
+                    reference_input_hash_comparison="Not applicable across CSV and the original Excel format.",
                     fixed_document_long_run=LR_TERMS, fixed_document_short_run=SR_TERMS)
     write_json('run_manifest.json', manifest)
     if not all(sha(r['path'])==r['sha256'] for r in inputs):
@@ -984,9 +996,8 @@ def build_summary(ledger, validations, manifest):
         "input_validation.csv records calendar and value checks.",
         "run_manifest.json records input paths, SHA-256 hashes, model rules, "
         "and the observed Python/package versions.",
-        "Byte-for-byte agreement with the original input files: "
-        + str(manifest["reference_input_bytes_match"]),
-        "A different hash indicates changed file bytes, not necessarily changed model inputs.", "",
+        "Input file hashes identify the current CSV files. Original reference hashes identify Excel files, "
+        "so byte-for-byte agreement is not evaluated across these formats.", "",
     ]
     (OUT / "RUN_SUMMARY.md").write_text("\n".join(text), encoding="utf-8")
     return summary
@@ -996,8 +1007,8 @@ def main(argv=None):
     """Execute the reference experiments and numerical audit."""
     global CARD, MACRO, OUT
     parser = argparse.ArgumentParser(description="Combined YoY12 / EC_lag12 reproduction audit")
-    parser.add_argument("--card", type=Path, default=DEFAULT_CARD, help="Fee workbook")
-    parser.add_argument("--macro", type=Path, default=DEFAULT_MACRO, help="Macro workbook")
+    parser.add_argument("--card", type=Path, default=DEFAULT_CARD, help="Fee CSV file")
+    parser.add_argument("--macro", type=Path, default=DEFAULT_MACRO, help="Macro CSV file")
     parser.add_argument("--output", type=Path, help="New or empty output directory")
     args = parser.parse_args(argv)
     CARD, MACRO = args.card.expanduser().resolve(), args.macro.expanduser().resolve()
