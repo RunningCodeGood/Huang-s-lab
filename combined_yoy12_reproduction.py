@@ -33,8 +33,8 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.diagnostic import breaks_cusumolsresid, acorr_breusch_godfrey
 
 ROOT = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
-DEFAULT_CARD = ROOT / "data" / "Cardfee.csv"
-DEFAULT_MACRO = ROOT / "data" / "Macro_Data_201001-202612.csv"
+DEFAULT_CARD = ROOT / "Cardfee.csv"
+DEFAULT_MACRO = ROOT / "Macro_Data_201001-202612.csv"
 CARD_HEADER, MACRO_HEADER = 0, 0
 CSV_ENCODING = "utf-8-sig"
 CSV_SEPARATOR = ","
