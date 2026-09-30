@@ -1,0 +1,62 @@
+Consumer Card Fee Overview
+Model Summary
+
+DEVELOPMENT DATA
+
+Monthly Consumer Card fee revenue from Jan 2011 to Dec 2025, together with
+macroeconomic data.
+
+In-sample (IS): Jan 2011-Sep 2023; 150 effective regression observations after
+transformation and lag construction.
+Out-of-time (OOT): Oct 2023-Dec 2025, 27 months.
+Production refit: Data through Dec 2025; 177 effective regression observations.
+
+METHODOLOGY
+
+1. Target variable
+   Monthly log change in Consumer Card fee revenue:
+
+   y_t = 100 x [ln(Fee_t) - ln(Fee_{t-1})]
+
+2. Model specification
+   Linear regression with two lags of the target variable, January and December
+   seasonal indicators, and the trailing three-month average of retail sales
+   monthly percentage growth.
+
+3. Feature selection
+   Screen macroeconomic transformations using IS data, considering statistical
+   significance, multicollinearity and residual diagnostics.
+
+4. Performance assessment
+   Evaluate Static In-sample, Static OOT and Recursive OOT performance. Assess
+   coefficient stability using 60-month rolling windows.
+
+5. Production refit
+   After OOT assessment, retain the selected model structure and re-estimate
+   the same set of coefficients using all available data through Dec 2025.
+
+6. Scenario forecasts
+   Generate 27-month Baseline and S4 adverse stress forecasts from Jan 2026
+   to Mar 2028, using fixed production coefficients and a single Dec 2025
+   forecast origin. Recursively update lagged target values and convert
+   predicted log changes into fee levels. No subsequent actual fee observations
+   are used.
+
+ASSUMPTIONS
+
+- Historical relationships between fee growth, lagged fee growth and retail
+  sales growth remain applicable over the forecast horizon.
+- January and December seasonal effects persist with the estimated magnitudes.
+- Baseline and S4 use the same production coefficients and historical starting
+  point; differences arise solely from the supplied future retail sales paths.
+
+LIMITATIONS & WEAKNESSES
+
+- Retail sales is the only selected macroeconomic driver; other economic
+  transmission channels and changes in pricing, customer mix or payment
+  behavior are not explicitly modeled.
+- Seasonal indicators impose recurring calendar effects and may not capture
+  changes in seasonal patterns.
+- Recursive forecasts can accumulate errors over the 27-month horizon.
+- Forecasts are conditional point estimates; they do not quantify parameter
+  uncertainty or assign probabilities to the macroeconomic scenarios.
