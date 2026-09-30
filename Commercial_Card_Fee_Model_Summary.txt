@@ -1,0 +1,54 @@
+Commercial + Small Business Card Fee Overview
+Model Summary
+
+DEVELOPMENT DATA
+
+Monthly Commercial Card and Small Business fee revenue and macroeconomic data
+from Jan 2011 to Dec 2025.
+
+In-sample (IS): Jan 2011-Sep 2023, 153 months.
+Out-of-time (OOT): Oct 2023-Dec 2025, 27 months.
+
+METHODOLOGY
+
+1. Target variable
+   Combined fee revenue = Commercial Card + Small Business.
+   The short-run model forecasts its YoY growth:
+
+   y_t = 100 x (Combined_t / Combined_{t-12} - 1)
+
+2. Long-run relationship
+   Estimate combined fee revenue as a function of CPI using IS data.
+
+3. Error correction and overlay
+   Express the long-run residual as a percentage of the contemporaneous fitted
+   level. Subtract a linear trend estimated over the 27-month OOT window to
+   obtain the adjusted error-correction term.
+
+4. Short-run model
+   Apply IS/OOT macro screening and forward selection. The final model includes
+   adjusted EC at lag 12, own YoY growth at lags 1 and 6, and corporate profit
+   YoY growth at lag 2.
+
+5. Scenario forecasts
+   Recursively forecast monthly fee revenue from Jan 2026 to Mar 2028 using
+   baseline and S4 CPI and corporate profit paths. Convert predicted YoY growth
+   into fee levels and update lagged inputs each month.
+
+ASSUMPTIONS
+
+- Estimated model relationships remain stable over the forecast horizon.
+- The overlay remains fixed at its Dec 2025 value of -30.143 percentage points
+  of scaled EC, without further trend extrapolation.
+- Baseline and S4 use the same coefficients and historical starting point.
+  Differences reflect the supplied macroeconomic scenario paths.
+
+LIMITATIONS & WEAKNESSES
+
+- OOT observations inform variable screening and overlay estimation, so
+  reported OOT errors represent a fitted backtest rather than fully independent
+  validation.
+- The CPI-based long-run relationship and fixed overlay may not capture
+  further structural changes in fee generation.
+- Recursive forecasts can accumulate errors. Reported point forecasts do not
+  quantify parameter or macroeconomic scenario uncertainty.
