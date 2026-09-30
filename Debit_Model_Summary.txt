@@ -1,0 +1,25 @@
+Debit Card Fee Overview
+Model Summary
+
+Development Data
+Monthly debit card fee revenue from January 2011 through December 2025. Exclude all of 2011 following the regulatory fee reset and retain January 2012 onward. Aggregate monthly fees into quarterly totals for the adopted forecast.
+
+Methodology
+1. Target variable: quarterly debit card fee revenue, calculated as the sum of monthly fees.
+2. Data treatment: replace March and December 2012, which reflect confirmed expense reversals, with the average of the adjacent months: 853.5 and 780.5, respectively. Retain the unconfirmed 2014 anomalies.
+3. Regression exploration: test Level ARDL, a YoY route toward ECM, MoM ARDL, and quarterly QoQ ARDL. No candidate passes all defined first-step screening rules. The YoY route stops before ECM estimation.
+4. Qualitative forecast:
+   - Baseline: 4,747.6 per quarter, based on the average of the latest eight quarters, 2024 Q1 through 2025 Q4.
+   - Stress: 3,815.9 per quarter, using the model document's post-2015 mean of 4,553.9 minus two standard deviations of 369.0. The historical window is 2015 Q1 through 2025 Q4, covering 44 quarters.
+   - The adopted stress level is approximately 19.6% below baseline. Both figures are quarterly revenue levels, not growth rates.
+
+Assumptions
+- The latest eight-quarter average represents the current quarterly revenue run rate.
+- The post-2015 period provides a relevant historical basis for the downside assumption.
+- The confirmed 2012 expense reversals are nonrecurring and do not represent core transactional fee activity.
+
+Limitations & Weaknesses
+- The qualitative forecast has no explicit linkage to hypothetical macroeconomic scenarios.
+- The causes of the 2014 anomalies and the sustained Q1 2015 level shift remain unconfirmed.
+- Mean minus two standard deviations is a stress assumption, not a guaranteed lower bound or a validated tail probability.
+- Some document-reported historical summary statistics require reconciliation with the underlying observations. Forecast figures above retain the adopted values in Debit Card Fee Model.
