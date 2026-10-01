@@ -1,0 +1,28 @@
+Commercial + Small Business Card Fee Overview
+
+METHODOLOGY
+
+Target variable:
+Combined fee revenue = Commercial Card + Small Business.
+The short-run model forecasts its YoY growth:
+y_t = 100 * (Combined_t / Combined_(t-12) - 1)
+
+Engle-Granger two-step approach:
+
+Long-run:
+Estimate combined fee revenue as a function of CPI using in-sample data, and test residual stationarity.
+
+Error correction and overlay:
+Scale the long-run residual by the contemporaneous fitted level. Subtract a linear trend estimated over Oct 2023-Dec 2025 to obtain the overlay-adjusted EC.
+
+Short-run model:
+Apply IS/OOT variable screening and forward selection. The final model includes adjusted EC at lag 12, own YoY growth at lags 1 and 6, and corporate profit YoY growth at lag 2. Forecast recursively from Jan 2026 to Mar 2028 under S1 and S4 macro paths.
+
+ASSUMPTIONS
+
+- Model relationships remain stable over the forecast horizon.
+- The overlay stays at its Dec 2025 level of -30.143 percentage points.
+
+LIMITATIONS & WEAKNESSES
+
+- The CPI-based long-run relationship and fixed overlay may miss future structural changes.
